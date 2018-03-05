@@ -1,0 +1,58 @@
+## local mysql connection details
+
+# to start the data base got to mac preference and there should be mysql icon to start the service
+
+# Once you have started the service go the pather where mysql is installed
+cd /usr/local/mysql-5.7.20-macos10.12-x86_64/bin
+
+./mysql -u root -p
+
+# enter default password that you get when  you install
+>Q8_+cYKZrRx
+
+# Once you are in my sql change the password using following command
+
+mysql> SET PASSWORD FOR 'root'@'localhost' = PASSWORD('Enter ur passwd');
+
+
+
+create database chtest;
+
+use chtest;
+
+CREATE TABLE `users` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `email` varchar(255) COLLATE utf8_bin NOT NULL,
+    `password` varchar(255) COLLATE utf8_bin NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin
+AUTO_INCREMENT=1 ;
+
+
+
+### Python client library for mysql
+
+pip install PyMySQL
+
+
+
+
+
+### GCP MYSQL INSTANCE
+
+instance id: webscrap
+username: root
+pwd: enter ur pwd
+
+
+./mysql --host=104.197.110.185 --user=root --password
+
+
+LOAD data local infile '/Users/demo/Downloads/MNState_Campaign_Finance_v3.csv' into table chtest.campaign_fin_state_stg1 FIELDS TERMINATED BY ','
+
+
+
+
+### Connect to gcp mysql use shell
+
+gcloud sql connect webscrap --user=root
