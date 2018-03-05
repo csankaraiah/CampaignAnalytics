@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Chakra March 05 2018: This code captures data from Hennepin county around the campaign finances that has been submitted by
-# folks running for mayor, city council & park board.
+# campaign committees running for minneapolis city mayor, city council, Hennepin county & park board.
 
 from scrapy import Spider
 from selenium import webdriver
