@@ -918,3 +918,143 @@ GROUP BY voterid
 ORDER BY voterid
 limit 100
 
+
+### Election history with voter attributes
+
+SELECT
+CountyCode,
+FirstName,
+MiddleName,
+LastName,
+NameSuffix,
+HouseNumber,
+StreetName,
+UnitType,
+UnitNumber,
+Address2,
+City,
+State,
+ZipCode,
+MailAddress,
+MailCity,
+MailState,
+MailZipCode,
+PhoneNumber,
+RegistrationDate,
+DOBYear,
+StateMcdCode,
+McdName,
+PrecinctCode,
+PrecinctName,
+WardCode,
+School,
+SchSub,
+Judicial,
+Legislative,
+StateSen,
+Congressional,
+Commissioner,
+Park,
+SoilWater,
+Hospital,
+LegacyId,
+a.* FROM campaign.MN_VOTERS_ELECTION_ByYear a join
+`campaign.MN_VOTERS_LIST` b on a.voterid = b.voterid
+
+
+
+
+#########Fundraising analysis
+
+## Amy KLOBUCHAR fundraising opportunity. Individuals who have contributed to her before 2012 but have not contributed since 2012
+
+select cmte_nm,extract( year from trans_dt) trans_yr, name,city,state,ZIP_CODE,employer,occupation,entity_tp,transaction_tp, sum( TRANSACTION_AMT) contrib_amt
+from `campaign.CMTE_INDV_TO_CAND_TRANS_DENORM`
+where cmte_nm in ('KLOBUCHAR FOR MINNESOTA 2012','KLOBUCHAR FOR MINNESOTA','AMY KLOBUCHAR VICTORY COMMITTEE')
+and name in (select a.name from
+            (select name from `campaign.CMTE_INDV_TO_CAND_TRANS_DENORM`
+            where cmte_nm in ('KLOBUCHAR FOR MINNESOTA 2012','KLOBUCHAR FOR MINNESOTA','AMY KLOBUCHAR VICTORY COMMITTEE')
+            and extract( year from trans_dt) <= 2012 ) a left outer join
+            (select distinct name from `campaign.CMTE_INDV_TO_CAND_TRANS_DENORM`
+            where cmte_nm in ('KLOBUCHAR FOR MINNESOTA 2012','KLOBUCHAR FOR MINNESOTA','AMY KLOBUCHAR VICTORY COMMITTEE')
+            and extract( year from trans_dt) > 2012) b on a.name = b.name
+            where b.name is null )
+group by cmte_nm,trans_yr, name,city,state,ZIP_CODE,employer,occupation,entity_tp,transaction_tp
+order by contrib_amt desc
+
+
+## Contributes by individual to any DFL candidate
+
+select cmte_nm,extract( year from trans_dt) trans_yr, name,city,state,ZIP_CODE,employer,occupation,entity_tp,transaction_tp, sum( TRANSACTION_AMT) contrib_amt
+from `campaign.CMTE_INDV_TO_CAND_TRANS_DENORM`
+--where cmte_nm in ('KLOBUCHAR FOR MINNESOTA 2012','KLOBUCHAR FOR MINNESOTA','AMY KLOBUCHAR VICTORY COMMITTEE')
+where CAND_PTY_AFFILIATION in ('DFL', 'DEM')
+and CAND_OFFICE_ST = 'MN'
+and name is not null
+and extract( year from trans_dt) <= 2012
+group by cmte_nm,trans_yr, name,city,state,ZIP_CODE,employer,occupation,entity_tp,transaction_tp
+order by contrib_amt desc
+
+
+## Amy KLOBUCHAR fundraising opportunity. Individuals who have contributed to other DFL candidates in MN but not to Amy ever before
+
+select cmte_nm,extract( year from trans_dt) trans_yr, name,city,state,ZIP_CODE,employer,occupation,entity_tp,transaction_tp, sum( TRANSACTION_AMT) contrib_amt
+from `campaign.CMTE_INDV_TO_CAND_TRANS_DENORM`
+where CAND_PTY_AFFILIATION in ('DFL', 'DEM')
+and CAND_OFFICE_ST = 'MN'
+and name in (select a.name from
+            (select distinct name
+              from `campaign.CMTE_INDV_TO_CAND_TRANS_DENORM`
+              where CAND_PTY_AFFILIATION in ('DFL', 'DEM')
+              and CAND_OFFICE_ST = 'MN'
+              and name is not null) a left outer join
+            (select distinct name from `campaign.CMTE_INDV_TO_CAND_TRANS_DENORM`
+              where cmte_nm in ('KLOBUCHAR FOR MINNESOTA 2012','KLOBUCHAR FOR MINNESOTA','AMY KLOBUCHAR VICTORY COMMITTEE')
+              --and extract( year from trans_dt) > 2012
+              ) b on a.name = b.name
+              where b.name is null )
+group by cmte_nm,trans_yr, name,city,state,ZIP_CODE,employer,occupation,entity_tp,transaction_tp
+order by contrib_amt desc
+
+
+
+#### Amy Klobuchar Committee to candidate contribution
+
+select CMTE_NM, CMTE_ST1, CMTE_ST2, CMTE_CITY, CMTE_ST, CMTE_ZIP, CMTE_DSGN, CMTE_TP, CMTE_PTY_AFFILIATION, ORG_TP,
+CONNECTED_ORG_NM, CAND_NAME, CAND_PTY_AFFILIATION, CAND_OFFICE, CAND_CITY, CAND_ST, CAND_ZIP, AMNDT_IND, RPT_TP, TRANSACTION_TP, ENTITY_TP,
+NAME, CITY, STATE, EMPLOYER, OCCUPATION, extract(year from trans_dt) trans_yr, sum(TRANSACTION_AMT) as trans_amt
+from `campaign.CMTE_TO_CAND_TRANS_DENORM`
+where CAND_NAME = 'KLOBUCHAR, AMY'
+group by  CMTE_NM, CMTE_ST1, CMTE_ST2, CMTE_CITY, CMTE_ST, CMTE_ZIP, CMTE_DSGN, CMTE_TP, CMTE_PTY_AFFILIATION, ORG_TP,
+CONNECTED_ORG_NM, CAND_NAME, CAND_PTY_AFFILIATION, CAND_OFFICE, CAND_CITY, CAND_ST, CAND_ZIP, AMNDT_IND, RPT_TP, TRANSACTION_TP, ENTITY_TP,
+NAME, CITY, STATE, EMPLOYER, OCCUPATION,trans_yr
+order by trans_amt desc
+
+
+
+#### Amy Klobuchar Committee to candidate contribution that happened in before 2012 but not after it
+
+select CMTE_NM, CMTE_ST1, CMTE_ST2, CMTE_CITY, CMTE_ST, CMTE_ZIP, CMTE_DSGN, CMTE_TP, CMTE_PTY_AFFILIATION, ORG_TP,
+CONNECTED_ORG_NM, CAND_NAME, CAND_PTY_AFFILIATION, CAND_OFFICE, CAND_CITY, CAND_ST, CAND_ZIP, AMNDT_IND, RPT_TP, TRANSACTION_TP, ENTITY_TP,
+NAME, CITY, STATE, EMPLOYER, OCCUPATION, extract(year from trans_dt) trans_yr, sum(TRANSACTION_AMT) as trans_amt
+from `campaign.CMTE_TO_CAND_TRANS_DENORM`
+where CAND_NAME = 'KLOBUCHAR, AMY'
+and CMTE_NM in (select  a.CMTE_NM from (
+                        (select distinct CMTE_NM
+                          from `campaign.CMTE_TO_CAND_TRANS_DENORM`
+                          where CAND_NAME = 'KLOBUCHAR, AMY'
+                          and extract(year from trans_dt) <= 2012) a
+                        left outer join
+                        (select distinct CMTE_NM
+                          from `campaign.CMTE_TO_CAND_TRANS_DENORM`
+                          where CAND_NAME = 'KLOBUCHAR, AMY'
+                          and extract(year from trans_dt) > 2012) b
+                         on a.cmte_nm = b.cmte_nm
+                        )
+                where b.cmte_nm is null )
+group by  CMTE_NM, CMTE_ST1, CMTE_ST2, CMTE_CITY, CMTE_ST, CMTE_ZIP, CMTE_DSGN, CMTE_TP, CMTE_PTY_AFFILIATION, ORG_TP,
+CONNECTED_ORG_NM, CAND_NAME, CAND_PTY_AFFILIATION, CAND_OFFICE, CAND_CITY, CAND_ST, CAND_ZIP, AMNDT_IND, RPT_TP, TRANSACTION_TP, ENTITY_TP,
+NAME, CITY, STATE, EMPLOYER, OCCUPATION,trans_yr
+order by trans_amt desc
+
+
